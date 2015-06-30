@@ -47,3 +47,16 @@ rate = 2
 temp = track._spawn(track._data, {'frame_rate': track.frame_rate*rate})
 temp.speedup(playback_speed=2, chunk_size=80, crossfade=5)
 ```
+
+# Mix two tracks
+
+```py
+slices1 = [track1[i:i+500] for i in range(0, len(track1), 500)]
+slices2 = [track2[i:i+500] for i in range(0, len(track2), 500)]
+first = slices[0]
+for i, s in enumerate(slices[1:]):
+    if i % 2 == 0:
+        first += slices1[i]
+    else:
+        first += slices2[i]
+```
