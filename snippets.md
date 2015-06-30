@@ -33,4 +33,17 @@ for i, s in enumerate(slices[1:]):
     first += s
 ```
 
+# Speed up/slow down + pitch
 
+```py
+rate = 2
+track._spawn(track._data, {'frame_rate': track.frame_rate*rate})
+```
+
+# Pitch (without slowing down)
+
+```py
+rate = 2
+temp = track._spawn(track._data, {'frame_rate': track.frame_rate*rate})
+temp.speedup(playback_speed=2, chunk_size=80, crossfade=5)
+```
