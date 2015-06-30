@@ -1,0 +1,16 @@
+# EKOiE
+
+Set of tools used for *Extreme Opening & Ending Contest* (*Ekstremalny Konkurs
+Openingów i Endingów*), one of my flagship events at conventions.
+
+This is heavily WIP (work in progress), and probably not usable yet. My desire
+is to manage these tools using single interface, and utilize that while running
+the event.
+
+## Installation
+
+I used Python 3.4.3 while coding this. I advise using `virtualenv`/`pyenv` in
+order to create fresh environment.
+
+1. `sudo apt-get install ffmpeg` (required to open/save MP3 files)
+1. `pip install -r requirements.txt`
