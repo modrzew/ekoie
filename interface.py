@@ -23,23 +23,22 @@ def quit():
     sys.exit(0)
 
 
-class QuitPopup(npyscreen.ActionPopup):
-    """Popup used for exiting the app"""
-    def on_ok(self):
-        self.parentApp.setNextForm(None)
-
-    def on_cancel(self):
-        self.parentApp.switchFormPrevious()
+def show_quit_popup():
+    """Display popup asking whether to quit application"""
+    result = npyscreen.notify_yes_no(
+        message='Do you really want to quit?',
+        title='Quit',
+        editw=1,  # select No button by default
+    )
+    if result:
+        quit()
 
 
 class MyForm(npyscreen.FormBaseNew):
-    def h_quit(self, key):
-        self.parentApp.switchForm('quit_popup')
-
     def set_up_handlers(self):
         super(MyForm, self).set_up_handlers()
         keys = {
-            'q': self.h_quit,
+            'q': show_quit_popup,
         }
         # Make upperkeys available, too!
         for key, func in list(keys.items()):
@@ -55,16 +54,6 @@ class App(npyscreen.NPSAppManaged):
             name='Track number',
             values=[1, 2, 3, 4, 5],
         )
-
-        quit_popup = self.addForm(
-            'quit_popup',
-            QuitPopup,
-            name='Really quit?',
-            lines=5,
-        )
-        quit_popup.show_atx = 40
-        quit_popup.show_aty = 20
-
         self.setNextForm('MAIN')
 
 
