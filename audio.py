@@ -7,6 +7,9 @@ import threading
 
 from pydub.utils import make_chunks
 import pyaudio
+import pydub
+
+import pyaudio_fix
 
 
 SEGMENT_LENGTH_SECONDS = 35  # 35
@@ -69,6 +72,10 @@ def stop():
     if _CURRENT_SONG_PLAYER:
         _CURRENT_SONG_PLAYER.stop()
         _CURRENT_SONG_PLAYER = None
+
+
+def load(filename):
+    return pydub.AudioSegment.from_mp3(filename)
 
 
 def speed_up(segment, speed):
