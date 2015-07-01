@@ -1,1 +1,2 @@
 pydub==0.14.0
+npyscreen==4.9.1
