@@ -15,4 +15,5 @@ I used Python 3.4.3 on Ubuntu 15.04 while coding this. I advise using
 1. `sudo apt-get install ffmpeg` (required to open/save MP3 files)
 1. `sudo apt-get install libncurses5-dev` (it might be necessary to recompile
    your Python if this wasn't installed before)
+1. `sudo apt-get install portaudio19-dev` (required to play audio)
 1. `pip install -r requirements.txt`
