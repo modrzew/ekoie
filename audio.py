@@ -3,18 +3,72 @@
 `segment` in function arguments stands for AudioSegment.
 """
 import random
+import threading
 
-import pydub
-import pydub.playback
+from pydub.utils import make_chunks
+import pyaudio
 
 
 SEGMENT_LENGTH_SECONDS = 35  # 35
 MINIMUM_STARTING_POINT = 30  # skip at least 30 seconds from the beginning
 MAXIMUM_STARTING_POINT = 90  # ...and no more than 90 seconds
 
+_CURRENT_SONG_PLAYER = None
+
+
+class PyaudioPlayer(threading.Thread):
+    """Improved audio player, based on pydub.playback
+
+    This player is based on threading, with simple method to stop playing
+    without raising KeyboardInterruption.
+    """
+    def __init__(self, segment):
+        super(PyaudioPlayer, self).__init__()
+        self.segment = segment
+        self._playing = True
+
+    def run(self):
+        player = pyaudio.PyAudio()
+        stream = player.open(
+            format=player.get_format_from_width(self.segment.sample_width),
+            channels=self.segment.channels,
+            rate=self.segment.frame_rate,
+            output=True,
+        )
+
+        # break audio into half-second chunks (to allows keyboard interrupts)
+        for chunk in make_chunks(self.segment, 250):
+            if not self._playing:
+                break
+            stream.write(chunk._data)
+
+        stream.stop_stream()
+        stream.close()
+        player.terminate()
+
+    def stop(self):
+        """Stops playing current song"""
+        self._playing = False
+
 
 def play(segment):
-    pydub.playback.play(segment)
+    """Plays segment using global player
+
+    If another song is being played, it's stopped (and its player is
+    destroyed).
+    """
+    global _CURRENT_SONG_PLAYER
+    stop()
+    _CURRENT_SONG_PLAYER = PyaudioPlayer(segment)
+    _CURRENT_SONG_PLAYER.start()
+
+
+def stop():
+    """Stops playing current song and destroys the player."""
+    global _CURRENT_SONG_PLAYER
+    if _CURRENT_SONG_PLAYER:
+        _CURRENT_SONG_PLAYER.stop()
+        _CURRENT_SONG_PLAYER = None
 
 
 def speed_up(segment, speed):
