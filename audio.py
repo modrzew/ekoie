@@ -2,6 +2,7 @@
 
 `segment` in function arguments stands for AudioSegment.
 """
+import os.path
 import random
 import threading
 
@@ -152,5 +153,5 @@ def get_info(filename):
     return (
         ', '.join(info['title']),
         ', '.join(info['artist']),
-        filename,
+        os.path.basename(filename),
     )

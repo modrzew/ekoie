@@ -6,6 +6,7 @@ import npyscreen
 
 from pyaudio_fix import fix_pyaudio
 import audio
+import filters
 import utils
 
 
@@ -57,17 +58,25 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         self.parent.set_status('Loading')
         track = audio.load(filename)
         self.parent.parentApp.current_track = audio.cut(track, 70000)
+        self.parent.parentApp.current_track_no = self.values[value]
         self.parent.parentApp.notify('Loaded!')
         self.parent.set_status('Ready to play')
 
 
 class MyForm(npyscreen.FormBaseNew):
     def h_play(self, key):
-        if not self.parentApp.current_track:
+        app = self.parentApp
+        if not app.current_track:
             return
-        self.parentApp.notify('Loading file...')
-        audio.play(audio.cut(self.parentApp.current_track))
-        self.parentApp.notify('Playing!')
+        try:
+            self.get_widget('track-list').values.remove(app.current_track_no)
+        except ValueError:
+            pass
+        self.get_widget('track-list').value = []
+        # self.get_widget('track-list').display()
+        app.notify('Loading file...')
+        audio.play(audio.cut(app.current_track))
+        app.notify('Playing!')
         self.set_status('Playing')
 
     def h_stop(self, key):
@@ -75,22 +84,7 @@ class MyForm(npyscreen.FormBaseNew):
         self.parentApp.notify('Stopped.')
         self.set_status('Ready to play')
 
-    def h_randomize(self, key):
-        pass
-
-    def h_goto(self, key):
-        pass
-
-    def h_shuffle(self, key):
-        filenames = self.parentApp.filenames
-        new = utils.shuffle(filenames)
-        self.parentApp.filenames = new
-        self.parentApp.notify('Shuffled.')
-
-    def h_delete(self, key):
-        pass
-
-    def h_load(self, key):
+    def h_select_filters(self, key):
         pass
 
     def set_status(self, message):
@@ -103,11 +97,8 @@ class MyForm(npyscreen.FormBaseNew):
         keys = {
             '^q': show_quit_popup,
             'a': self.h_play,
-            'd': self.h_delete,
             's': self.h_stop,
-            'r': self.h_randomize,
-            'g': self.h_goto,
-            'f': self.h_shuffle,
+            'f': self.h_select_filters,
         }
         # Make upperkeys available, too!
         for key, func in list(keys.items()):
@@ -120,6 +111,7 @@ class App(npyscreen.NPSAppManaged):
         super(App, self).__init__(*args, **kwargs)
         self._filenames = []
         self.current_track = None
+        self.current_track_no = None
 
     @property
     def filenames(self):
@@ -128,7 +120,7 @@ class App(npyscreen.NPSAppManaged):
     @filenames.setter
     def filenames(self, value):
         self._filenames = value
-        track_number = self.getForm('MAIN').get_widget('track-number')
+        track_number = self.getForm('MAIN').get_widget('track-list')
         track_number.values = list(self._filenames.keys())
         track_number.display()
 
@@ -138,7 +130,7 @@ class App(npyscreen.NPSAppManaged):
             TracksListWidget,
             name='Track number',
             values=[],
-            w_id='track-number',
+            w_id='track-list',
             max_height=form.lines-7,
             width=int(form.columns/2),
         )
@@ -150,6 +142,7 @@ class App(npyscreen.NPSAppManaged):
             editable=False,
             w_id='status',
         )
+        # Split screen vertically in half
         form.nextrely = 2
         form.nextrelx = int(form.columns/2) + 2
         form.add_widget(
@@ -173,6 +166,7 @@ class App(npyscreen.NPSAppManaged):
             height=15,
             name='Filters',
             w_id='filters',
+            values=list(filters.FILTERS.keys()),
         )
         self.setNextForm('MAIN')
 
@@ -186,7 +180,7 @@ class App(npyscreen.NPSAppManaged):
         self.notify(
             'Loading files from {directory}...'.format(directory=DIRECTORY),
         )
-        self.filenames = utils.get_filenames(DIRECTORY)
+        self.filenames = utils.shuffle(utils.get_filenames(DIRECTORY))
         self.notify('{count} files loaded.'.format(count=len(self.filenames)))
 
 
