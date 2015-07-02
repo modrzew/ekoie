@@ -13,11 +13,11 @@ from ctypes import (
 )
 
 
-def py_error_handler(filename, line, function, err, fmt):
+def _py_error_handler(filename, line, function, err, fmt):
     pass
 
 
-ERROR_HANDLER_FUNC = CFUNCTYPE(
+_ERROR_HANDLER_FUNC = CFUNCTYPE(
     None,
     c_char_p,
     c_int,
@@ -25,9 +25,16 @@ ERROR_HANDLER_FUNC = CFUNCTYPE(
     c_int,
     c_char_p,
 )
+_c_error_handler = None
 
 
 def fix_pyaudio():
-    c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
-    asound = cdll.LoadLibrary('libasound.so')
-    asound.snd_lib_error_set_handler(c_error_handler)
+    global _c_error_handler  # required to trick the garbage collector
+    _c_error_handler = _ERROR_HANDLER_FUNC(_py_error_handler)
+    _asound = cdll.LoadLibrary('libasound.so')
+    _asound.snd_lib_error_set_handler(_c_error_handler)
+
+
+__all__ = [
+    'fix_pyaudio',
+]

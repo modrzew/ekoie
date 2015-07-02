@@ -6,6 +6,10 @@ import npyscreen
 
 from pyaudio_fix import fix_pyaudio
 import audio
+import utils
+
+
+DIRECTORY = '/media/d/OneDrive/Muzyka/Chińskie bajki'  # TODO: change this
 
 
 @contextmanager
@@ -42,21 +46,34 @@ class TracksListWidget(npyscreen.TitleSelectOne):
     def when_value_edited(self):
         if not self.value:
             return
+        value = self.value[0]
         song_info = self.parent.get_widget('song-info')
-        song_info.values = audio.get_info('sample.mp3')
+        filename = self.parent.parentApp.filenames.get(value)
+        info = audio.get_info(filename)
+        song_info.values = info
         song_info.display()
+        # Load info!
+        self.parent.parentApp.notify('Loading {title}...'.format(title=info[0]))
+        self.parent.set_status('Loading')
+        track = audio.load(filename)
+        self.parent.parentApp.current_track = audio.cut(track, 70000)
+        self.parent.parentApp.notify('Loaded!')
+        self.parent.set_status('Ready to play')
 
 
 class MyForm(npyscreen.FormBaseNew):
     def h_play(self, key):
+        if not self.parentApp.current_track:
+            return
         self.parentApp.notify('Loading file...')
-        track = audio.load('sample.mp3')
-        audio.play(audio.cut(track))
+        audio.play(audio.cut(self.parentApp.current_track))
         self.parentApp.notify('Playing!')
+        self.set_status('Playing')
 
     def h_stop(self, key):
         audio.stop()
         self.parentApp.notify('Stopped.')
+        self.set_status('Ready to play')
 
     def h_randomize(self, key):
         pass
@@ -65,10 +82,21 @@ class MyForm(npyscreen.FormBaseNew):
         pass
 
     def h_shuffle(self, key):
-        pass
+        filenames = self.parentApp.filenames
+        new = utils.shuffle(filenames)
+        self.parentApp.filenames = new
+        self.parentApp.notify('Shuffled.')
 
     def h_delete(self, key):
         pass
+
+    def h_load(self, key):
+        pass
+
+    def set_status(self, message):
+        song_status = self.get_widget('song-status')
+        song_status.value = message
+        song_status.display()
 
     def set_up_handlers(self):
         super(MyForm, self).set_up_handlers()
@@ -88,12 +116,28 @@ class MyForm(npyscreen.FormBaseNew):
 
 
 class App(npyscreen.NPSAppManaged):
+    def __init__(self, *args, **kwargs):
+        super(App, self).__init__(*args, **kwargs)
+        self._filenames = []
+        self.current_track = None
+
+    @property
+    def filenames(self):
+        return self._filenames
+
+    @filenames.setter
+    def filenames(self, value):
+        self._filenames = value
+        track_number = self.getForm('MAIN').get_widget('track-number')
+        track_number.values = list(self._filenames.keys())
+        track_number.display()
+
     def onStart(self):
         form = self.addForm('MAIN', MyForm, name='EKOiE')
         form.add_widget(
             TracksListWidget,
             name='Track number',
-            values=range(1, 250),
+            values=[],
             w_id='track-number',
             max_height=form.lines-7,
             width=int(form.columns/2),
@@ -116,11 +160,34 @@ class App(npyscreen.NPSAppManaged):
             values=[],
             w_id='song-info',
         )
+        form.add_widget(
+            npyscreen.TitleFixedText,
+            height=3,
+            name='Song status',
+            editable=False,
+            w_id='song-status',
+        )
+        form.add_widget(
+            npyscreen.MultiLineEditableTitle,
+            editable=False,
+            height=15,
+            name='Filters',
+            w_id='filters',
+        )
         self.setNextForm('MAIN')
+
+        self.load_filenames()
 
     def notify(self, message):
         self.status.value = message
         self.status.display()
+
+    def load_filenames(self):
+        self.notify(
+            'Loading files from {directory}...'.format(directory=DIRECTORY),
+        )
+        self.filenames = utils.get_filenames(DIRECTORY)
+        self.notify('{count} files loaded.'.format(count=len(self.filenames)))
 
 
 if __name__ == '__main__':
