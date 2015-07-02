@@ -88,8 +88,7 @@ def reverse(segment):
     return segment.reverse()
 
 
-def random_frequency(segment):
-    frequency = random.randint(4000, 20000)
+def frequency(segment, frequency):
     return segment.set_frame_rate(frequency)
 
 
@@ -99,7 +98,7 @@ def volume_changer(segment, slice_length=250):
     result = slices[0]
     for i, s in enumerate(slices[1:]):
         if i % 2 == 0:
-            s -= 30
+            s -= 15
         result += s
     return result
 
@@ -107,16 +106,20 @@ def volume_changer(segment, slice_length=250):
 def pitch(segment, rate):
     return segment._spawn(
         segment._data,
-        {'frame_rate': segment.frame_rate*rate},
+        {'frame_rate': int(segment.frame_rate*rate)},
     )
 
 
 def tone_down(segment, rate):
     result = segment._spawn(
         segment._data,
-        {'frame_rate': segment.frame_rate*rate},
+        {'frame_rate': int(segment.frame_rate*rate)},
     )
-    return result.speedup(playback_speed=2, chunk_size=80, crossfade=5)
+    return result.speedup(
+        playback_speed=round(1/rate, 2),
+        chunk_size=80,
+        crossfade=5,
+    )
 
 
 def mix_segments(segments, slice_length=500):
