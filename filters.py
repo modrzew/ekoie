@@ -15,7 +15,7 @@ def _prepare(track):
 def speed_up(track):
     rate = 1.4 + round(0.5 * random.random(), 2)
     track = track[:int(rate * len(track))]
-    return audio.speed_up(track, rate)
+    return audio.pitch(track, rate)
 
 
 def slow_down(track):
@@ -43,21 +43,24 @@ def tone_down(track):
     return audio.tone_down(track, rate)
 
 
+# NOTE (2015.07.02): all filters that use pydub's speedup function are currently
+# turned off, due to my netbook being too slow to be able to use it
 FILTERS = {
-    # 'speed up': speed_up,
+    'speed up': speed_up,
     'slow down': slow_down,
     'reverse': reverse,
     'frequency': frequency,
     'volume changer': volume_changer,
     # 'tone down': tone_down,
 }
+FILTERS_LIST = list(FILTERS)
 DONT_LIKE_EACH_OTHER = {
-    'speed up': ('slow down'),
-    'slow down': ('speed up'),
+    'speed up': ('slow down',),
+    'slow down': ('speed up',),
     'reverse': (),
     'frequency': (),
     'volume changer': (),
-    'tone down': ('slow down'),
+    'tone down': ('slow down',),
 }
 
 

@@ -76,7 +76,10 @@ class MyForm(npyscreen.FormBaseNew):
             pass
         self.get_widget('track-list').value = []
         app.notify('Loading file...')
-        audio.play(audio.cut(app.current_track))
+        track = audio.cut(app.current_track)
+        app.notify('Applying filters...')
+        track = filters.apply(track, self.parentApp.filters)
+        audio.play(track)
         app.notify('Playing!')
         self.set_status('Playing')
 
@@ -86,12 +89,12 @@ class MyForm(npyscreen.FormBaseNew):
         self.set_status('Ready to play')
 
     def h_select_filters(self, key):
-        sample = random.sample(
-            range(len(filters.FILTERS)),
-            random.randint(0, len(filters.FILTERS)-1),
-        )
-        self.get_widget('filters').value = sample
-        self.get_widget('filters').display()
+        selected = filters.get_random_filters()
+        self.parentApp.filters = selected
+        values = [filters.FILTERS_LIST.index(f) for f in selected]
+        widget = self.get_widget('filters')
+        widget.value = values
+        widget.display()
         self.parentApp.notify('Filters randomized.')
 
     def set_status(self, message):
@@ -119,6 +122,7 @@ class App(npyscreen.NPSAppManaged):
         self._filenames = []
         self.current_track = None
         self.current_track_no = None
+        self.filters = []
 
     @property
     def filenames(self):
@@ -173,7 +177,7 @@ class App(npyscreen.NPSAppManaged):
             height=15,
             name='Filters',
             w_id='filters',
-            values=list(filters.FILTERS.keys()),
+            values=filters.FILTERS_LIST,
         )
         self.setNextForm('MAIN')
 
