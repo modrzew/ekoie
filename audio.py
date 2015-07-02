@@ -9,8 +9,6 @@ from pydub.utils import make_chunks
 import pyaudio
 import pydub
 
-import pyaudio_fix
-
 
 SEGMENT_LENGTH_SECONDS = 35  # 35
 MINIMUM_STARTING_POINT = 30  # skip at least 30 seconds from the beginning
