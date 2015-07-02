@@ -1,3 +1,4 @@
-pydub==0.14.0
-npyscreen==4.9.1
 git+http://people.csail.mit.edu/hubert/git/pyaudio.git
+mutagen==1.29
+npyscreen==4.9.1
+pydub==0.14.0

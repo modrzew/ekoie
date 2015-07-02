@@ -6,6 +6,7 @@ import random
 import threading
 
 from pydub.utils import make_chunks
+from mutagen.easyid3 import EasyID3
 import pyaudio
 import pydub
 
@@ -93,10 +94,7 @@ def random_frequency(segment):
 
 def volume_changer(segment, slice_length=250):
     # Split segment into equally sized slices
-    slices = [
-        segment[i:i+slice_length]
-        for i in range(0, len(segment), slice_length)
-    ]
+    slices = make_chunks(segment, slice_length)
     result = slices[0]
     for i, s in enumerate(slices[1:]):
         if i % 2 == 0:
@@ -128,7 +126,7 @@ def mix_segments(segments, slice_length=500):
     for segment in segments:
         if len(segment) != first_segment_length:
             raise ValueError('all segments need to have the same length')
-        slices.append([segment[i:i+500] for i in range(0, len(segment), 500)])
+        slices.append(make_chunks(segment, slice_length))
     first = slices[0][0]
     for i, s in enumerate(slices[1:]):
         first += slices[i % segments_count][i]
@@ -147,3 +145,12 @@ def cut(segment, length=None):
         end = len(segment) - 1
         start = end - length
     return segment[start:end]
+
+
+def get_info(filename):
+    info = EasyID3(filename)
+    return (
+        ', '.join(info['title']),
+        ', '.join(info['artist']),
+        filename,
+    )

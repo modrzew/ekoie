@@ -43,7 +43,7 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         if not self.value:
             return
         song_info = self.parent.get_widget('song-info')
-        song_info.values = ['hurr', 'durr', str(self.value[0])]
+        song_info.values = audio.get_info('sample.mp3')
         song_info.display()
 
 
