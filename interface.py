@@ -1,5 +1,7 @@
 from contextlib import contextmanager
+from datetime import datetime
 import os
+import random
 import sys
 
 import npyscreen
@@ -73,7 +75,6 @@ class MyForm(npyscreen.FormBaseNew):
         except ValueError:
             pass
         self.get_widget('track-list').value = []
-        # self.get_widget('track-list').display()
         app.notify('Loading file...')
         audio.play(audio.cut(app.current_track))
         app.notify('Playing!')
@@ -85,7 +86,13 @@ class MyForm(npyscreen.FormBaseNew):
         self.set_status('Ready to play')
 
     def h_select_filters(self, key):
-        pass
+        sample = random.sample(
+            range(len(filters.FILTERS)),
+            random.randint(0, len(filters.FILTERS)-1),
+        )
+        self.get_widget('filters').value = sample
+        self.get_widget('filters').display()
+        self.parentApp.notify('Filters randomized.')
 
     def set_status(self, message):
         song_status = self.get_widget('song-status')
@@ -161,7 +168,7 @@ class App(npyscreen.NPSAppManaged):
             w_id='song-status',
         )
         form.add_widget(
-            npyscreen.MultiLineEditableTitle,
+            npyscreen.TitleMultiSelect,
             editable=False,
             height=15,
             name='Filters',
@@ -173,7 +180,10 @@ class App(npyscreen.NPSAppManaged):
         self.load_filenames()
 
     def notify(self, message):
-        self.status.value = message
+        self.status.value = '[{time}] {message}'.format(
+            time=datetime.now().strftime('%H:%M:%S'),
+            message=message,
+        )
         self.status.display()
 
     def load_filenames(self):
