@@ -25,10 +25,11 @@ class PyaudioPlayer(threading.Thread):
     This player is based on threading, with simple method to stop playing
     without raising KeyboardInterruption.
     """
-    def __init__(self, segment):
+    def __init__(self, segment, notifier=None):
         super(PyaudioPlayer, self).__init__()
         self.segment = segment
         self._playing = True
+        self._notifier = notifier
 
     def run(self):
         player = pyaudio.PyAudio()
@@ -39,8 +40,10 @@ class PyaudioPlayer(threading.Thread):
             output=True,
         )
 
-        # break audio into half-second chunks (to allows keyboard interrupts)
-        for chunk in make_chunks(self.segment, 250):
+        # break audio into quarter-second chunks (to allows keyboard interrupts)
+        for i, chunk in enumerate(make_chunks(self.segment, 250)):
+            if self._notifier:
+                self._notifier(i*250)
             if not self._playing:
                 break
             stream.write(chunk._data)
@@ -54,7 +57,7 @@ class PyaudioPlayer(threading.Thread):
         self._playing = False
 
 
-def play(segment):
+def play(segment, notifier=None):
     """Plays segment using global player
 
     If another song is being played, it's stopped (and its player is
@@ -62,7 +65,7 @@ def play(segment):
     """
     global _CURRENT_SONG_PLAYER
     stop()
-    _CURRENT_SONG_PLAYER = PyaudioPlayer(segment)
+    _CURRENT_SONG_PLAYER = PyaudioPlayer(segment, notifier)
     _CURRENT_SONG_PLAYER.start()
 
 

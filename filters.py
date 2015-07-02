@@ -14,13 +14,11 @@ def _prepare(track):
 
 def speed_up(track):
     rate = 1.4 + round(0.5 * random.random(), 2)
-    track = track[:int(rate * len(track))]
     return audio.pitch(track, rate)
 
 
 def slow_down(track):
     rate = 0.4 + round(0.5 * random.random(), 2)
-    track = track[:int(rate * len(track))]
     return audio.pitch(track, rate)
 
 

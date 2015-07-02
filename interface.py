@@ -66,6 +66,10 @@ class TracksListWidget(npyscreen.TitleSelectOne):
 
 
 class MyForm(npyscreen.FormBaseNew):
+    def update_slider(self, value):
+        self.get_widget('position').value = value / 1000
+        self.get_widget('position').display()
+
     def h_play(self, key):
         app = self.parentApp
         if not app.current_track:
@@ -76,10 +80,13 @@ class MyForm(npyscreen.FormBaseNew):
             pass
         self.get_widget('track-list').value = []
         app.notify('Loading file...')
-        track = audio.cut(app.current_track)
+        # track = audio.cut(app.current_track)
         app.notify('Applying filters...')
-        track = filters.apply(track, self.parentApp.filters)
-        audio.play(track)
+        track = filters.apply(app.current_track, self.parentApp.filters)
+        track = audio.cut(track, 35000)
+        self.get_widget('position').entry_widget.out_of = len(track) / 1000
+        self.get_widget('position').display()
+        audio.play(track, notifier=self.update_slider)
         app.notify('Playing!')
         self.set_status('Playing')
 
@@ -164,13 +171,26 @@ class App(npyscreen.NPSAppManaged):
             values=[],
             w_id='song-info',
         )
+        # Song status
         form.add_widget(
             npyscreen.TitleFixedText,
-            height=3,
-            name='Song status',
+            height=1,
             editable=False,
+            name='Song status',
             w_id='song-status',
         )
+        form.nextrely += 2
+        # Slider
+        form.add_widget(
+            npyscreen.TitleSlider,
+            name='Position',
+            out_of=35,
+            lowest=0,
+            value=0,
+            label=True,
+            w_id='position',
+        )
+        form.nextrely += 2
         form.add_widget(
             npyscreen.TitleMultiSelect,
             editable=False,
