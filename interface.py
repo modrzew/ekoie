@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from datetime import datetime
 import os
-import random
+import os.path
 import sys
 
 import npyscreen
@@ -10,9 +10,6 @@ from pyaudio_fix import fix_pyaudio
 import audio
 import filters
 import utils
-
-
-DIRECTORY = '/media/d/OneDrive/Muzyka/Chińskie bajki'  # TODO: change this
 
 
 @contextmanager
@@ -49,19 +46,20 @@ class TracksListWidget(npyscreen.TitleSelectOne):
     def when_value_edited(self):
         if not self.value:
             return
-        value = self.value[0]
+        value = self.values[self.value[0]]
         song_info = self.parent.get_widget('song-info')
         filename = self.parent.parentApp.filenames.get(value)
-        info = audio.get_info(filename)
+        info = ('No. {no}'.format(no=value),) + audio.get_info(filename)
         song_info.values = info
         song_info.display()
         # Load info!
-        self.parent.parentApp.notify('Loading {title}...'.format(title=info[0]))
+        app = self.parent.parentApp
+        app.notify('Loading {title}...'.format(title=info[0]))
         self.parent.set_status('Loading')
         track = audio.load(filename)
-        self.parent.parentApp.current_track = audio.cut(track, 70000)
-        self.parent.parentApp.current_track_no = self.values[value]
-        self.parent.parentApp.notify('Loaded!')
+        app.current_track = audio.cut(track, 70000)
+        app.current_track_no = value
+        app.notify('Loaded!')
         self.parent.set_status('Ready to play')
 
 
@@ -123,10 +121,26 @@ class MyForm(npyscreen.FormBaseNew):
         self.handlers.update(keys)
 
 
+class DirectoryForm(npyscreen.Form):
+    def afterEditing(self):
+        path = self.get_widget('path').value
+        status = self.get_widget('status')
+        if not path:
+            status.value = 'Enter something'
+            return
+        if not os.path.isdir(path):
+            status.value = 'That is not a directory'
+            return
+        self.parentApp._path = path
+        self.parentApp.load_filenames(path)
+        self.parentApp.setNextForm('MAIN')
+
+
 class App(npyscreen.NPSAppManaged):
     def __init__(self, *args, **kwargs):
         super(App, self).__init__(*args, **kwargs)
         self._filenames = []
+        self._path = None
         self.current_track = None
         self.current_track_no = None
         self.filters = []
@@ -143,6 +157,20 @@ class App(npyscreen.NPSAppManaged):
         track_number.display()
 
     def onStart(self):
+        # Directory form
+        directory_form = self.addForm('directory', DirectoryForm)
+        directory_form.add_widget(
+            npyscreen.TitleText,
+            name='Path',
+            w_id='path',
+        )
+        directory_form.nextrely += 1
+        directory_form.add_widget(
+            npyscreen.FixedText,
+            w_id='status',
+            editable=False,
+        )
+        # Main form
         form = self.addForm('MAIN', MyForm, name='EKOiE')
         form.add_widget(
             TracksListWidget,
@@ -152,7 +180,7 @@ class App(npyscreen.NPSAppManaged):
             max_height=form.lines-7,
             width=int(form.columns/2),
         )
-        self.status = form.add_widget(
+        form.add_widget(
             npyscreen.TitleFixedText,
             height=2,
             name='Status',
@@ -199,22 +227,21 @@ class App(npyscreen.NPSAppManaged):
             w_id='filters',
             values=filters.FILTERS_LIST,
         )
-        self.setNextForm('MAIN')
-
-        self.load_filenames()
+        self.setNextForm('directory')
 
     def notify(self, message):
-        self.status.value = '[{time}] {message}'.format(
+        status = self.getForm('MAIN').get_widget('status')
+        status.value = '[{time}] {message}'.format(
             time=datetime.now().strftime('%H:%M:%S'),
             message=message,
         )
-        self.status.display()
+        status.display()
 
-    def load_filenames(self):
+    def load_filenames(self, path):
         self.notify(
-            'Loading files from {directory}...'.format(directory=DIRECTORY),
+            'Loading files from {path}...'.format(path=path),
         )
-        self.filenames = utils.shuffle(utils.get_filenames(DIRECTORY))
+        self.filenames = utils.shuffle(utils.get_filenames(path))
         self.notify('{count} files loaded.'.format(count=len(self.filenames)))
 
 

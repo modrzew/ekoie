@@ -9,10 +9,13 @@ def get_filenames(directory):
 
     Returns dictionary with numbers from 1 as keys.
     """
-    return {
-        i: os.path.join(os.path.abspath(directory), filename)
-        for i, filename in enumerate(os.listdir(directory), start=1)
-    }
+    results = []
+    for dirpath, dirnames, filenames in os.walk(directory):
+        for filename in filenames:
+            if not filename.endswith('mp3'):
+                continue
+            results.append(os.path.join(dirpath, filename))
+    return {i: path for i, path in enumerate(results, start=1)}
 
 
 def shuffle(filenames):

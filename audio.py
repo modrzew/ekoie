@@ -40,7 +40,7 @@ class PyaudioPlayer(threading.Thread):
             output=True,
         )
 
-        # break audio into quarter-second chunks (to allows keyboard interrupts)
+        # break audio into quarter-second chunks (to allows interrupts)
         for i, chunk in enumerate(make_chunks(self.segment, 250)):
             if self._notifier:
                 self._notifier(i*250)
