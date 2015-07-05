@@ -78,24 +78,43 @@ def stop():
 
 
 def load(filename):
+    """Loads a track based on path
+
+    Note: only MP3 supported right now.
+    """
     return pydub.AudioSegment.from_mp3(filename)
 
 
 def speed_up(segment, speed):
+    """Speeds up the track, while keeping the same length
+
+    Note: pydub's speedup is SLOW.
+    """
     if speed <= 1:
         raise ValueError('speed must not be lower than 1')
     return segment.speedup(playback_speed=speed, chunk_size=80, crossfade=5)
 
 
 def reverse(segment):
+    """Reverses the track"""
     return segment.reverse()
 
 
 def frequency(segment, frequency):
+    """Changes frequency
+
+    Lower frequency worsenes the quality.
+    """
     return segment.set_frame_rate(frequency)
 
 
 def volume_changer(segment, slice_length=250):
+    """Changes volume of the track on set interval
+
+    The track becomes something like this:
+    H L H L H L H L...
+    where H means high volume, and L stands for low (reduced) volume.
+    """
     # Split segment into equally sized slices
     slices = make_chunks(segment, slice_length)
     result = slices[0]
@@ -107,6 +126,7 @@ def volume_changer(segment, slice_length=250):
 
 
 def pitch(segment, rate):
+    """Changes the pitch, and also track's speed"""
     return segment._spawn(
         segment._data,
         {'frame_rate': int(segment.frame_rate*rate)},
@@ -114,6 +134,11 @@ def pitch(segment, rate):
 
 
 def tone_down(segment, rate):
+    """Lowers track's tone while keeping the same speed
+
+    Basically does the same thing as pitch, but retains the speed.
+    Note: pydub's speedup is SLOW.
+    """
     result = segment._spawn(
         segment._data,
         {'frame_rate': int(segment.frame_rate*rate)},
@@ -126,6 +151,11 @@ def tone_down(segment, rate):
 
 
 def mix_segments(segments, slice_length=500):
+    """Mixes two tracks together
+
+    Given two tracks 1 and 2, output becomes something like this:
+    1 2 1 2 1 2 1 2...
+    """
     segments_count = len(segments)
     # Make sure that segments have the same length
     first_segment_length = len(segments[0])
@@ -155,6 +185,10 @@ def cut(segment, length=None):
 
 
 def get_info(filename):
+    """Returns tuple of string info about the song
+
+    Note: only MP3 supported right now.
+    """
     info = EasyID3(filename)
     return (
         ', '.join(info['title']),

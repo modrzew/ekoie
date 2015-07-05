@@ -13,20 +13,24 @@ def _prepare(track):
 
 
 def speed_up(track):
+    """Speeds up the track"""
     rate = 1.4 + round(0.5 * random.random(), 2)
     return audio.pitch(track, rate)
 
 
 def slow_down(track):
+    """Slows down the track"""
     rate = 0.4 + round(0.5 * random.random(), 2)
     return audio.pitch(track, rate)
 
 
 def reverse(track):
+    """Reverses the track"""
     return audio.reverse(track)
 
 
 def frequency(track):
+    """Changes frequency, effectively worsening the quality"""
     frequency = random.randint(4000, 20000)
     return audio.frequency(track, frequency)
 
@@ -63,6 +67,10 @@ DONT_LIKE_EACH_OTHER = {
 
 
 def get_random_filters():
+    """Returns list of up to 3 random filters than can be applied
+
+    Filters that "don't like each other" are excluded.
+    """
     count = random.randint(0, 3)
     choose_from = list(FILTERS)
     filters = []
@@ -80,6 +88,10 @@ def get_random_filters():
 
 
 def apply(track, filters):
+    """Applies given filters on the track
+
+    Filters list must be passed as list of strings.
+    """
     for fil in filters:
         track = FILTERS[fil](track)
     return track

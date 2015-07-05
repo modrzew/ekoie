@@ -1,3 +1,9 @@
+"""Interface for the application
+
+This file can be run, and will properly initialize interface (and rest of the
+app) in your terminal.
+Battle-tested on Solarized color scheme and under tmux.
+"""
 from contextlib import contextmanager
 from datetime import datetime
 import os
@@ -43,7 +49,15 @@ def show_quit_popup(key=None):
 
 
 class TracksListWidget(npyscreen.TitleSelectOne):
+    """Widget displaying list of tracks
+
+    Properly loads the track after selecting.
+    """
     def when_value_edited(self):
+        """Loads the track to parent app after selecting
+
+        Also cuts it to proper length, if requested.
+        """
         if not self.value:
             return
         value = self.values[self.value[0]]
@@ -65,12 +79,18 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         self.parent.set_status('Ready to play')
 
 
-class MyForm(npyscreen.FormBaseNew):
+class MainForm(npyscreen.FormBaseNew):
+    """Main form of the application"""
     def update_slider(self, value):
+        """Sets value of position slider"""
         self.get_widget('position').value = value / 1000
         self.get_widget('position').display()
 
     def h_play(self, key):
+        """Plays currently selected tracki
+
+        Also applies filters, if any are selected.
+        """
         app = self.parentApp
         if not app.current_track:
             app.notify('No track selected')
@@ -92,11 +112,13 @@ class MyForm(npyscreen.FormBaseNew):
         self.set_status('Playing')
 
     def h_stop(self, key):
+        """Stops currently played track"""
         audio.stop()
         self.parentApp.notify('Stopped.')
         self.set_status('Ready to play')
 
     def h_select_filters(self, key):
+        """Randomly selects filters"""
         selected = filters.get_random_filters()
         self.parentApp.filters = selected
         values = [filters.FILTERS_LIST.index(f) for f in selected]
@@ -106,17 +128,29 @@ class MyForm(npyscreen.FormBaseNew):
         self.parentApp.notify('Filters randomized.')
 
     def h_reset_filters(self, key):
+        """Clears filters selection"""
         widget = self.get_widget('filters')
         widget.value = []
         widget.display()
         self.parentApp.notify('Filters cleared.')
 
     def set_status(self, message):
+        """Sets value for the status widget
+
+        This is kind of useful, because statusbar displays only the last
+        message, and it's important to know whether song is playing, stopped
+        or loaded.
+        """
         song_status = self.get_widget('song-status')
         song_status.value = message
         song_status.display()
 
     def set_up_handlers(self):
+        """Sets up handlers for keypresses
+
+        Bonus: upper keys are also supported, meaning you don't need to worry
+        about capslock!
+        """
         super(MyForm, self).set_up_handlers()
         keys = {
             '^q': show_quit_popup,
@@ -131,8 +165,15 @@ class MyForm(npyscreen.FormBaseNew):
         self.handlers.update(keys)
 
 
-class DirectoryForm(npyscreen.Form):
+class SettingsForm(npyscreen.Form):
+    """Form with settings
+
+    Mainly used to get working directory path. You can also customize some
+    other things here.
+    Should be displayed before main form.
+    """
     def afterEditing(self):
+        """Sets proper values in the parent app after pressing OK button"""
         app = self.parentApp
         path = self.get_widget('path').value
         status = self.get_widget('status')
@@ -154,6 +195,7 @@ class DirectoryForm(npyscreen.Form):
 
 
 class App(npyscreen.NPSAppManaged):
+    """Main application class"""
     def __init__(self, *args, **kwargs):
         super(App, self).__init__(*args, **kwargs)
         self._filenames = []
@@ -177,6 +219,13 @@ class App(npyscreen.NPSAppManaged):
         track_number.display()
 
     def onStart(self):
+        """Initializes all forms and populates it with widgets
+
+        TODO: maybe put each form code into:
+        1) separate method in App?
+        2) init method in each form?
+        Either of these would increase readability.
+        """
         # Directory form
         directory_form = self.addForm(
             'directory',
@@ -273,6 +322,7 @@ class App(npyscreen.NPSAppManaged):
         self.setNextForm('directory')
 
     def notify(self, message):
+        """Displays notification in the bottom of the screen"""
         status = self.getForm('MAIN').get_widget('status')
         status.value = '[{time}] {message}'.format(
             time=datetime.now().strftime('%H:%M:%S'),
@@ -281,6 +331,7 @@ class App(npyscreen.NPSAppManaged):
         status.display()
 
     def load_filenames(self, path):
+        """Loads filenames of tracks from working directory"""
         self.notify(
             'Loading files from {path}...'.format(path=path),
         )
