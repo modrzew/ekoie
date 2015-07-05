@@ -102,6 +102,12 @@ class MyForm(npyscreen.FormBaseNew):
         widget.display()
         self.parentApp.notify('Filters randomized.')
 
+    def h_reset_filters(self, key):
+        widget = self.get_widget('filters')
+        widget.value = []
+        widget.display()
+        self.parentApp.notify('Filters cleared.')
+
     def set_status(self, message):
         song_status = self.get_widget('song-status')
         song_status.value = message
@@ -114,6 +120,7 @@ class MyForm(npyscreen.FormBaseNew):
             'a': self.h_play,
             's': self.h_stop,
             'f': self.h_select_filters,
+            'r': self.h_reset_filters,
         }
         # Make upperkeys available, too!
         for key, func in list(keys.items()):
