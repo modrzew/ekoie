@@ -151,7 +151,7 @@ class MainForm(npyscreen.FormBaseNew):
         Bonus: upper keys are also supported, meaning you don't need to worry
         about capslock!
         """
-        super(MyForm, self).set_up_handlers()
+        super(MainForm, self).set_up_handlers()
         keys = {
             '^q': show_quit_popup,
             'a': self.h_play,
@@ -229,7 +229,7 @@ class App(npyscreen.NPSAppManaged):
         # Directory form
         directory_form = self.addForm(
             'directory',
-            DirectoryForm,
+            SettingsForm,
             name='Settings',
         )
         directory_form.add_widget(
@@ -263,7 +263,7 @@ class App(npyscreen.NPSAppManaged):
             w_id='seed',
         )
         # Main form
-        form = self.addForm('MAIN', MyForm, name='EKOiE')
+        form = self.addForm('MAIN', MainForm, name='EKOiE')
         form.add_widget(
             TracksListWidget,
             name='Track number',
