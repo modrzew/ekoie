@@ -71,7 +71,15 @@ def get_random_filters():
 
     Filters that "don't like each other" are excluded.
     """
-    count = random.randint(0, 3)
+    value = random.random()
+    if value < 0.15:
+        count = 0
+    elif value < 0.5:
+        count = 1
+    elif value < 0.8:
+        count = 2
+    else:
+        count = 3
     choose_from = list(FILTERS)
     filters = []
     for i in range(count):
