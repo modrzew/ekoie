@@ -131,6 +131,7 @@ class MainForm(npyscreen.FormBaseNew):
         """Clears filters selection"""
         widget = self.get_widget('filters')
         widget.value = []
+        self.parentApp.filters = []
         widget.display()
         self.parentApp.notify('Filters cleared.')
 
