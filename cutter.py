@@ -42,7 +42,7 @@ for i, filename in enumerate(filenames.values(), start=1):
         output_dir,
         os.path.basename(filename),
     )
-    track.export(new_filename, format='mp3')
+    track.export(new_filename, format='mp3', bitrate='256k')
     # Copy metadata, too
     data = EasyID3(filename)
     data.save(new_filename, v1=2)
