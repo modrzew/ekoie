@@ -57,7 +57,9 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         app.notify('Loading {title}...'.format(title=info[0]))
         self.parent.set_status('Loading')
         track = audio.load(filename)
-        app.current_track = audio.cut(track, 70000)
+        if not app._already_cut:
+            track = audio.cut(track, app._track_length * 2)
+        app.current_track = track
         app.current_track_no = value
         app.notify('Loaded!')
         self.parent.set_status('Ready to play')
@@ -71,6 +73,7 @@ class MyForm(npyscreen.FormBaseNew):
     def h_play(self, key):
         app = self.parentApp
         if not app.current_track:
+            app.notify('No track selected')
             return
         try:
             self.get_widget('track-list').values.remove(app.current_track_no)
@@ -78,10 +81,10 @@ class MyForm(npyscreen.FormBaseNew):
             pass
         self.get_widget('track-list').value = []
         app.notify('Loading file...')
-        # track = audio.cut(app.current_track)
+        # track = audio.cut(app.current_track
         app.notify('Applying filters...')
         track = filters.apply(app.current_track, self.parentApp.filters)
-        track = audio.cut(track, 35000)
+        track = track[:app._track_length]
         self.get_widget('position').entry_widget.out_of = len(track) / 1000
         self.get_widget('position').display()
         audio.play(track, notifier=self.update_slider)
@@ -133,7 +136,8 @@ class DirectoryForm(npyscreen.Form):
         app = self.parentApp
         path = self.get_widget('path').value
         status = self.get_widget('status')
-        track_length = self.get_widget('track_length')
+        track_length = self.get_widget('track_length').value
+        already_cut = self.get_widget('track_cut').value
         seed = self.get_widget('seed').value
         if not path:
             status.value = 'Enter something'
@@ -142,8 +146,9 @@ class DirectoryForm(npyscreen.Form):
             status.value = 'That is not a directory'
             return
         app._path = path
-        app._track_length = int(track_length.value)
+        app._track_length = int(track_length) * 1000
         app._seed = seed
+        app._already_cut = already_cut
         app.load_filenames(path)
         app.setNextForm('MAIN')
 
@@ -155,6 +160,9 @@ class App(npyscreen.NPSAppManaged):
         self._path = None
         self.current_track = None
         self.current_track_no = None
+        self._track_length = 35000  # in ms
+        self._seed = None
+        self._already_cut = False
         self.filters = []
 
     @property
@@ -188,9 +196,16 @@ class App(npyscreen.NPSAppManaged):
         )
         directory_form.add_widget(
             npyscreen.TitleText,
-            name='Track length (s)',
+            name='Track length',
             value='35',
             w_id='track_length',
+        )
+        directory_form.add_widget(
+            npyscreen.Checkbox,
+            name='Already cut?',
+            value=True,
+            w_id='track_cut',
+            relx=18,
         )
         directory_form.add_widget(
             npyscreen.TitleText,
