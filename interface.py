@@ -130,17 +130,22 @@ class MyForm(npyscreen.FormBaseNew):
 
 class DirectoryForm(npyscreen.Form):
     def afterEditing(self):
+        app = self.parentApp
         path = self.get_widget('path').value
         status = self.get_widget('status')
+        track_length = self.get_widget('track_length')
+        seed = self.get_widget('seed').value
         if not path:
             status.value = 'Enter something'
             return
         if not os.path.isdir(path):
             status.value = 'That is not a directory'
             return
-        self.parentApp._path = path
-        self.parentApp.load_filenames(path)
-        self.parentApp.setNextForm('MAIN')
+        app._path = path
+        app._track_length = int(track_length.value)
+        app._seed = seed
+        app.load_filenames(path)
+        app.setNextForm('MAIN')
 
 
 class App(npyscreen.NPSAppManaged):
@@ -165,7 +170,11 @@ class App(npyscreen.NPSAppManaged):
 
     def onStart(self):
         # Directory form
-        directory_form = self.addForm('directory', DirectoryForm)
+        directory_form = self.addForm(
+            'directory',
+            DirectoryForm,
+            name='Settings',
+        )
         directory_form.add_widget(
             npyscreen.TitleText,
             name='Path',
@@ -176,6 +185,18 @@ class App(npyscreen.NPSAppManaged):
             npyscreen.FixedText,
             w_id='status',
             editable=False,
+        )
+        directory_form.add_widget(
+            npyscreen.TitleText,
+            name='Track length (s)',
+            value='35',
+            w_id='track_length',
+        )
+        directory_form.add_widget(
+            npyscreen.TitleText,
+            name='Random seed',
+            value='this is some random seed',
+            w_id='seed',
         )
         # Main form
         form = self.addForm('MAIN', MyForm, name='EKOiE')
@@ -248,7 +269,10 @@ class App(npyscreen.NPSAppManaged):
         self.notify(
             'Loading files from {path}...'.format(path=path),
         )
-        self.filenames = utils.shuffle(utils.get_filenames(path))
+        self.filenames = utils.shuffle(
+            utils.get_filenames(path),
+            seed=self._seed,
+        )
         self.notify('{count} files loaded.'.format(count=len(self.filenames)))
 
 

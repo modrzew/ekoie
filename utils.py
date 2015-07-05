@@ -18,8 +18,9 @@ def get_filenames(directory):
     return {i: path for i, path in enumerate(results, start=1)}
 
 
-def shuffle(filenames):
+def shuffle(filenames, seed=None):
     """Shuffles filenames and assigns them new keys"""
     values = list(filenames.values())
+    random.seed(seed)
     random.shuffle(values)
     return {i: v for i, v in enumerate(values, start=1)}
