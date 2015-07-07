@@ -165,8 +165,9 @@ def mix_segments(segments, slice_length=500):
             raise ValueError('all segments need to have the same length')
         slices.append(make_chunks(segment, slice_length))
     first = slices[0][0]
-    for i, s in enumerate(slices[1:]):
+    for i, s in enumerate(slices[0][1:], start=1):
         first += slices[i % segments_count][i]
+    return first
 
 
 def cut(segment, length=None):

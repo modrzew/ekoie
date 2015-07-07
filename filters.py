@@ -1,6 +1,24 @@
+import os
+import os.path
 import random
 
 import audio
+
+
+_PANZER_TRACKS = []
+_PANZER_PATH = 'panzerfaust'
+
+
+def initialize_panzer_tracks():
+    """Initializes panzerfaust tracks, to keep them in memory for later use"""
+    if not os.path.exists(_PANZER_PATH):
+        return
+    for filename in os.listdir(_PANZER_PATH):
+        if not filename.endswith('.mp3'):
+            continue
+        path = os.path.join(_PANZER_PATH, filename)
+        track = audio.load(path)
+        _PANZER_TRACKS.append(track)
 
 
 def _prepare(track):
@@ -36,17 +54,34 @@ def frequency(track):
 
 
 def volume_changer(track):
+    """Changes volume of the track"""
     slice_length = random.choice((250, 500, 750))
     return audio.volume_changer(track, slice_length)
 
 
 def tone_down(track):
+    """Lowers tone of the track without lowering speed"""
     rate = 0.4 + round(0.5 * random.random(), 2)
     return audio.tone_down(track, rate)
 
 
-# NOTE (2015.07.02): all filters that use pydub's speedup function are currently
-# turned off, due to my netbook being too slow to be able to use it
+def panzerfaust(track):
+    """Mixes track with one of the panzer tracks"""
+    if not _PANZER_TRACKS:
+        return track
+    panzer_track = random.choice(_PANZER_TRACKS)
+    # Cut panzer track to track's length
+    track_length = len(track)
+    # Fix: not all panzer tracks have proper length!
+    if len(panzer_track) < track_length:
+        panzer_track = panzer_track + panzer_track
+    panzer_track = panzer_track[:track_length]
+    slice_length = random.choice((250, 500, 750))
+    return audio.mix_segments([track, panzer_track], slice_length)
+
+
+# NOTE (2015.07.02): all filters that use pydub's speedup function are
+# currently turned off, due to my netbook being too slow to be able to use it
 FILTERS = {
     'speed up': speed_up,
     'slow down': slow_down,
@@ -54,6 +89,7 @@ FILTERS = {
     'frequency': frequency,
     'volume changer': volume_changer,
     # 'tone down': tone_down,
+    'panzerfaust': panzerfaust,
 }
 FILTERS_LIST = list(FILTERS)
 DONT_LIKE_EACH_OTHER = {
@@ -63,6 +99,7 @@ DONT_LIKE_EACH_OTHER = {
     'frequency': (),
     'volume changer': (),
     'tone down': ('slow down',),
+    'panzerfaust': ('volume changer', 'speed up', 'slow down'),
 }
 
 

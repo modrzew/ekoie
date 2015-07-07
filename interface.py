@@ -76,6 +76,8 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         app.current_track = track
         app.current_track_no = value
         app.notify('Loaded!')
+        # Also, clear filters
+        self.parent.h_reset_filters()
         self.parent.set_status('Ready to play')
 
 
@@ -127,7 +129,7 @@ class MainForm(npyscreen.FormBaseNew):
         widget.display()
         self.parentApp.notify('Filters randomized.')
 
-    def h_reset_filters(self, key):
+    def h_reset_filters(self, key=None):
         """Clears filters selection"""
         widget = self.get_widget('filters')
         widget.value = []
@@ -192,6 +194,7 @@ class SettingsForm(npyscreen.Form):
         app._seed = seed
         app._already_cut = already_cut
         app.load_filenames(path)
+        app.initialize_panzer()
         app.setNextForm('MAIN')
 
 
@@ -341,6 +344,11 @@ class App(npyscreen.NPSAppManaged):
             seed=self._seed,
         )
         self.notify('{count} files loaded.'.format(count=len(self.filenames)))
+
+    def initialize_panzer(self):
+        self.notify('Initializing panzerfaust filter...')
+        filters.initialize_panzer_tracks()
+        self.notify('Panzerfaust filter initialized.')
 
 
 if __name__ == '__main__':
