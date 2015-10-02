@@ -73,11 +73,17 @@ def panzerfaust(track):
     # Cut panzer track to track's length
     track_length = len(track)
     # Fix: not all panzer tracks have proper length!
-    if len(panzer_track) < track_length:
+    while len(panzer_track) < track_length:
         panzer_track = panzer_track + panzer_track
     panzer_track = panzer_track[:track_length]
     slice_length = random.choice((250, 500, 750))
     return audio.mix_segments([track, panzer_track], slice_length)
+
+
+def multiple_tracks(tracks):
+    """Mixes multiple tracks into single one"""
+    slice_length = random.choice((250, 500, 750))
+    return audio.mix_segments(tracks, slice_length)
 
 
 # NOTE (2015.07.02): all filters that use pydub's speedup function are

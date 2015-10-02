@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from datetime import datetime
 import os
 import os.path
+import random
 import sys
 
 import npyscreen
@@ -16,6 +17,9 @@ from pyaudio_fix import fix_pyaudio
 import audio
 import filters
 import utils
+
+
+LOAD_MULTIPLE_THRESHOLD = 0.15
 
 
 @contextmanager
@@ -53,28 +57,55 @@ class TracksListWidget(npyscreen.TitleSelectOne):
 
     Properly loads the track after selecting.
     """
+    def get_additional_values(self, value):
+        app = self.parent.parentApp
+        values = [value]
+        if random.random() >= LOAD_MULTIPLE_THRESHOLD:
+            return values
+        app.notify('Multiple tracks selected!')
+        count = random.randint(1, 2)
+        for _ in range(count):
+            for __ in range(10):
+                selected = random.choice(self.values)
+                if selected not in values:
+                    values.append(selected)
+                    break
+        return values
+
     def when_value_edited(self):
         """Loads the track to parent app after selecting
 
         Also cuts it to proper length, if requested.
         """
+        # TODO: this method is ugly as hell, refactor it plx
         if not self.value:
             return
-        value = self.values[self.value[0]]
-        song_info = self.parent.get_widget('song-info')
-        filename = self.parent.parentApp.filenames.get(value)
-        info = ('No. {no}'.format(no=value),) + audio.get_info(filename)
-        song_info.values = info
-        song_info.display()
-        # Load info!
         app = self.parent.parentApp
-        app.notify('Loading {title}...'.format(title=info[0]))
+        value = self.values[self.value[0]]
+        values = self.get_additional_values(value)
+        song_info = self.parent.get_widget('song-info')
+        infos = []
         self.parent.set_status('Loading')
-        track = audio.load(filename)
-        if not app._already_cut:
-            track = audio.cut(track, app._track_length * 2)
+        tracks = []
+        for value in values:
+            filename = self.parent.parentApp.filenames.get(value)
+            info = audio.get_info(filename)
+            infos.append('No. {no}'.format(no=value),)
+            infos += info
+            infos.append('\n')
+            song_info.display()
+            # Load info!
+            app.notify('Loading {title}...'.format(title=info[0]))
+            track = audio.load(filename)
+            if not app._already_cut:
+                track = audio.cut(track, app._track_length * 2)
+            tracks.append(track)
+        song_info.values = infos
+        song_info.display()
+        # Mix 'em up!
+        track = filters.multiple_tracks(tracks)
         app.current_track = track
-        app.current_track_no = value
+        app.current_track_nos = values
         app.notify('Loaded!')
         # Also, clear filters
         self.parent.h_reset_filters()
@@ -89,7 +120,7 @@ class MainForm(npyscreen.FormBaseNew):
         self.get_widget('position').display()
 
     def h_play(self, key):
-        """Plays currently selected tracki
+        """Plays currently selected track
 
         Also applies filters, if any are selected.
         """
@@ -97,13 +128,12 @@ class MainForm(npyscreen.FormBaseNew):
         if not app.current_track:
             app.notify('No track selected')
             return
-        try:
-            self.get_widget('track-list').values.remove(app.current_track_no)
-        except ValueError:
-            pass
+        for track_no in app.current_track_nos:
+            try:
+                self.get_widget('track-list').values.remove(track_no)
+            except ValueError:
+                pass
         self.get_widget('track-list').value = []
-        app.notify('Loading file...')
-        # track = audio.cut(app.current_track
         app.notify('Applying filters...')
         track = filters.apply(app.current_track, self.parentApp.filters)
         track = track[:app._track_length]
@@ -289,8 +319,8 @@ class App(npyscreen.NPSAppManaged):
         form.nextrelx = int(form.columns/2) + 2
         form.add_widget(
             npyscreen.MultiLineEditableTitle,
-            height=6,
-            name='Song info',
+            height=18,
+            name='Songs info',
             editable=False,
             values=[],
             w_id='song-info',
