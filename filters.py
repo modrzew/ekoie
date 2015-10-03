@@ -76,13 +76,15 @@ def panzerfaust(track):
     while len(panzer_track) < track_length:
         panzer_track = panzer_track + panzer_track
     panzer_track = panzer_track[:track_length]
+    # Lower volume of panzer track
+    panzer_track -= 6
     slice_length = random.choice((250, 500, 750))
     return audio.mix_segments([track, panzer_track], slice_length)
 
 
 def multiple_tracks(tracks):
     """Mixes multiple tracks into single one"""
-    slice_length = random.choice((250, 500, 750))
+    slice_length = random.choice((2000, 4000))
     return audio.mix_segments(tracks, slice_length)
 
 
@@ -114,6 +116,7 @@ def get_random_filters():
 
     Filters that "don't like each other" are excluded.
     """
+    return ('slow down', 'panzerfaust')
     value = random.random()
     if value < 0.15:
         count = 0

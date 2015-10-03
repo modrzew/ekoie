@@ -19,8 +19,8 @@ import filters
 import utils
 
 
-LOAD_MULTIPLE_THRESHOLD = 0.15
-
+LOAD_MULTIPLE_THRESHOLD = 0.1
+LOAD_TRIPLE_THRESHOLD = 0.3
 
 @contextmanager
 def use_xterm():
@@ -63,7 +63,10 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         if random.random() >= LOAD_MULTIPLE_THRESHOLD:
             return values
         app.notify('Multiple tracks selected!')
-        count = random.randint(1, 2)
+        if random.random() < LOAD_TRIPLE_THRESHOLD:
+            count = 2
+        else:
+            count = 1
         for _ in range(count):
             for __ in range(10):
                 selected = random.choice(self.values)
@@ -348,7 +351,7 @@ class App(npyscreen.NPSAppManaged):
         form.add_widget(
             npyscreen.TitleMultiSelect,
             editable=False,
-            height=15,
+            height=10,
             name='Filters',
             w_id='filters',
             values=filters.FILTERS_LIST,
