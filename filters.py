@@ -116,7 +116,6 @@ def get_random_filters():
 
     Filters that "don't like each other" are excluded.
     """
-    return ('slow down', 'panzerfaust')
     value = random.random()
     if value < 0.15:
         count = 0

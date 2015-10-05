@@ -22,6 +22,7 @@ import utils
 LOAD_MULTIPLE_THRESHOLD = 0.1
 LOAD_TRIPLE_THRESHOLD = 0.3
 
+
 @contextmanager
 def use_xterm():
     """Helper setting proper TERM value
@@ -113,6 +114,7 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         # Also, clear filters
         self.parent.h_reset_filters()
         self.parent.set_status('Ready to play')
+        self.parent.calculate_points()
 
 
 class MainForm(npyscreen.FormBaseNew):
@@ -161,6 +163,7 @@ class MainForm(npyscreen.FormBaseNew):
         widget.value = values
         widget.display()
         self.parentApp.notify('Filters randomized.')
+        self.calculate_points()
 
     def h_reset_filters(self, key=None):
         """Clears filters selection"""
@@ -180,6 +183,26 @@ class MainForm(npyscreen.FormBaseNew):
         song_status = self.get_widget('song-status')
         song_status.value = message
         song_status.display()
+
+    def calculate_points(self):
+        """Sets proper amount of points in Points widget"""
+        widget = self.get_widget('points')
+        # Filters
+        points = {
+            0: 2,
+            1: 3,
+            2: 5,
+            3: 7,
+        }.get(len(self.parentApp.filters))
+        # Multiple songs
+        points *= {
+            0: 1,
+            1: 1,
+            2: 1.8,
+            3: 2.6,
+        }.get(len(self.parentApp.current_track_nos))
+        widget.value = int(round(points))
+        widget.display()
 
     def set_up_handlers(self):
         """Sets up handlers for keypresses
@@ -238,7 +261,7 @@ class App(npyscreen.NPSAppManaged):
         self._filenames = []
         self._path = None
         self.current_track = None
-        self.current_track_no = None
+        self.current_track_nos = []
         self._track_length = 35000  # in ms
         self._seed = None
         self._already_cut = False
@@ -351,10 +374,18 @@ class App(npyscreen.NPSAppManaged):
         form.add_widget(
             npyscreen.TitleMultiSelect,
             editable=False,
-            height=10,
+            height=8,
             name='Filters',
             w_id='filters',
             values=filters.FILTERS_LIST,
+        )
+        form.nextrely += 2
+        form.add_widget(
+            npyscreen.TitleFixedText,
+            height=1,
+            editable=False,
+            name='Points',
+            w_id='points',
         )
         self.setNextForm('directory')
 
