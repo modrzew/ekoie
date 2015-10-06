@@ -157,13 +157,10 @@ def mix_segments(segments, slice_length=500):
     1 2 1 2 1 2 1 2...
     """
     segments_count = len(segments)
-    # Make sure that segments have the same length
-    first_segment_length = len(segments[0])
-    slices = []
-    for segment in segments:
-        if len(segment) != first_segment_length:
-            raise ValueError('all segments need to have the same length')
-        slices.append(make_chunks(segment, slice_length))
+    # Cut to the shortest segment
+    shortest_length = min(len(segment) for segment in segments)
+    segments = [segment[:shortest_length] for segment in segments]
+    slices = [make_chunks(segment, slice_length) for segment in segments]
     first = slices[0][0]
     for i, s in enumerate(slices[0][1:], start=1):
         first += slices[i % segments_count][i]
