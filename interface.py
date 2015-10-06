@@ -198,8 +198,8 @@ class MainForm(npyscreen.FormBaseNew):
         points *= {
             0: 1,
             1: 1,
-            2: 1.8,
-            3: 2.6,
+            2: 2.4,
+            3: 3.6,
         }.get(len(self.parentApp.current_track_nos))
         widget.value = int(round(points))
         widget.display()
