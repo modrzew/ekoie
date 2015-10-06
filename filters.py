@@ -117,11 +117,11 @@ def get_random_filters():
     Filters that "don't like each other" are excluded.
     """
     value = random.random()
-    if value < 0.15:
+    if value < 0.2:
         count = 0
-    elif value < 0.5:
+    elif value < 0.55:
         count = 1
-    elif value < 0.8:
+    elif value < 0.85:
         count = 2
     else:
         count = 3

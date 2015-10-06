@@ -19,7 +19,7 @@ import filters
 import utils
 
 
-LOAD_MULTIPLE_THRESHOLD = 0.1
+LOAD_MULTIPLE_THRESHOLD = 0.2
 LOAD_TRIPLE_THRESHOLD = 0.3
 
 
