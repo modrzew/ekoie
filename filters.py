@@ -119,7 +119,7 @@ def overlay_music(track):
         overlay_track = overlay_track + overlay_track
     overlay_track = overlay_track[:track_length]
     # Lower volume of our track
-    track -= 6
+    track -= 4
     return audio.overlay([track, overlay_track])
 
 
@@ -133,6 +133,7 @@ FILTERS = {
     'volume changer': volume_changer,
     # 'tone down': tone_down,
     'panzerfaust': panzerfaust,
+    'overlay': overlay_music,
 }
 FILTERS_LIST = list(FILTERS)
 DONT_LIKE_EACH_OTHER = {
@@ -143,6 +144,7 @@ DONT_LIKE_EACH_OTHER = {
     'volume changer': (),
     'tone down': ('slow down',),
     'panzerfaust': ('volume changer', 'speed up', 'slow down'),
+    'overlay': ('panzerfaust', 'speed up'),
 }
 
 

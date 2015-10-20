@@ -58,11 +58,15 @@ class TracksListWidget(npyscreen.TitleSelectOne):
 
     Properly loads the track after selecting.
     """
-    def get_additional_values(self, value):
+    def get_additional_filenames(self, filename):
+        """Loads up to 2 additional tracks
+
+        Returns list of filenames.
+        """
         app = self.parent.parentApp
-        values = [value]
+        filenames = [filename]
         if random.random() >= LOAD_MULTIPLE_THRESHOLD:
-            return values
+            return filenames
         app.notify('Multiple tracks selected!')
         if random.random() < LOAD_TRIPLE_THRESHOLD:
             count = 2
@@ -71,45 +75,55 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         for _ in range(count):
             for __ in range(10):
                 selected = random.choice(self.values)
-                if selected not in values:
-                    values.append(selected)
+                if selected not in filenames:
+                    filenames.append(selected)
                     break
-        return values
+        return filenames
+
+    def load_tracks(self, filenames):
+        """Loads files as pydub tracks"""
+        tracks = []
+        for filename in filenames:
+            app.notify('Loading {title}...'.format(title=filename))
+            track = audio.load(filename)
+            if not app._already_cut:
+                track = audio.cut(track, app._track_length * 2)
+            tracks.append(track)
+        return tracks
+
+    def get_infos(self, filenames):
+        """Obtains infos about filenames"""
+        infos = []
+        for filename in filenames:
+            filename = self.parent.parentApp.filenames.get(filename)
+            info = audio.get_info(filename)
+            infos.append('No. {no}'.format(no=filename),)
+            infos += info
+            infos.append('\n')
+        return infos
 
     def when_value_edited(self):
         """Loads the track to parent app after selecting
 
         Also cuts it to proper length, if requested.
         """
-        # TODO: this method is ugly as hell, refactor it plx
         if not self.value:
             return
         app = self.parent.parentApp
-        value = self.values[self.value[0]]
-        values = self.get_additional_values(value)
+        filename = self.values[self.value[0]]
+        filenames = self.get_additional_values(filename)
         song_info = self.parent.get_widget('song-info')
-        infos = []
+        # Load everything
+        filenames = [self.parent.parentApp.filenames.get(v) for v in filenames]
+        infos = self.get_infos(filenames)
+        tracks = self.load_tracks(filenames)
         self.parent.set_status('Loading')
-        tracks = []
-        for value in values:
-            filename = self.parent.parentApp.filenames.get(value)
-            info = audio.get_info(filename)
-            infos.append('No. {no}'.format(no=value),)
-            infos += info
-            infos.append('\n')
-            song_info.display()
-            # Load info!
-            app.notify('Loading {title}...'.format(title=info[0]))
-            track = audio.load(filename)
-            if not app._already_cut:
-                track = audio.cut(track, app._track_length * 2)
-            tracks.append(track)
         song_info.values = infos
         song_info.display()
         # Mix 'em up!
         track = filters.multiple_tracks(tracks)
         app.current_track = track
-        app.current_track_nos = values
+        app.current_track_nos = filenames
         app.notify('Loaded!')
         # Also, clear filters
         self.parent.h_reset_filters()
