@@ -193,3 +193,11 @@ def get_info(filename):
         ', '.join(info['artist']),
         os.path.basename(filename),
     )
+
+
+def overlay(tracks):
+    """Mixes multiple tracks together by layering one onto another"""
+    main_track = tracks[0]
+    for track in tracks[1:]:
+        main_track = main_track.overlay(track, loop=True)
+    return main_track
