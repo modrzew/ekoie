@@ -7,6 +7,8 @@ import audio
 
 _PANZER_TRACKS = []
 _PANZER_PATH = 'panzerfaust'
+_OVERLAY_TRACKS = []
+_OVERLAY_PATH = 'overlay'
 
 
 def initialize_panzer_tracks():
@@ -19,6 +21,18 @@ def initialize_panzer_tracks():
         path = os.path.join(_PANZER_PATH, filename)
         track = audio.load(path)
         _PANZER_TRACKS.append(track)
+
+
+def initialize_overlay_tracks():
+    """Initializes overlay tracks, to keep them in memory for later use"""
+    if not os.path.exists(_OVERLAY_PATH):
+        return
+    for filename in os.listdir(_OVERLAY_PATH):
+        if not filename.endswith('.mp3'):
+            continue
+        path = os.path.join(_OVERLAY_PATH, filename)
+        track = audio.load(path)
+        _OVERLAY_TRACKS.append(track)
 
 
 def _prepare(track):
@@ -83,9 +97,30 @@ def panzerfaust(track):
 
 
 def multiple_tracks(tracks):
-    """Mixes multiple tracks into single one"""
+    """Mixes multiple tracks into single one
+
+    Tracks will be mixed with either of these methods, chosen randomly:
+    - mix_segments
+    - overlay
+    """
     slice_length = random.choice((2000, 4000))
     return audio.mix_segments(tracks, slice_length)
+
+
+def overlay_music(track):
+    """"""
+    if not _OVERLAY_TRACKS:
+        return track
+    overlay_track = random.choice(_OVERLAY_TRACKS)
+    # Cut overlay track to track's length
+    track_length = len(track)
+    # Fix: not all overlay tracks have proper length!
+    while len(overlay_track) < track_length:
+        overlay_track = overlay_track + overlay_track
+    overlay_track = overlay_track[:track_length]
+    # Lower volume of our track
+    track -= 6
+    return audio.overlay([track, overlay_track])
 
 
 # NOTE (2015.07.02): all filters that use pydub's speedup function are
