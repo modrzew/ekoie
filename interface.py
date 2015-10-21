@@ -82,6 +82,7 @@ class TracksListWidget(npyscreen.TitleSelectOne):
 
     def load_tracks(self, filenames):
         """Loads files as pydub tracks"""
+        app = self.parent.parentApp
         tracks = []
         for filename in filenames:
             app.notify('Loading {title}...'.format(title=filename))
@@ -93,11 +94,12 @@ class TracksListWidget(npyscreen.TitleSelectOne):
 
     def get_infos(self, filenames):
         """Obtains infos about filenames"""
+        app = self.parent.parentApp
         infos = []
         for filename in filenames:
-            filename = self.parent.parentApp.filenames.get(filename)
             info = audio.get_info(filename)
-            infos.append('No. {no}'.format(no=filename),)
+            no = app._filenames_list.index(filename) + 1
+            infos.append('No. {no}'.format(no=no),)
             infos += info
             infos.append('\n')
         return infos
@@ -111,10 +113,10 @@ class TracksListWidget(npyscreen.TitleSelectOne):
             return
         app = self.parent.parentApp
         filename = self.values[self.value[0]]
-        filenames = self.get_additional_values(filename)
+        filenames = self.get_additional_filenames(filename)
         song_info = self.parent.get_widget('song-info')
         # Load everything
-        filenames = [self.parent.parentApp.filenames.get(v) for v in filenames]
+        filenames = [app.filenames.get(v) for v in filenames]
         infos = self.get_infos(filenames)
         tracks = self.load_tracks(filenames)
         self.parent.set_status('Loading')
@@ -129,6 +131,12 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         self.parent.h_reset_filters()
         self.parent.set_status('Ready to play')
         self.parent.calculate_points()
+        # And remove values from big list
+        indexes = [app._filenames_list.index(f) for f in filenames]
+        for index in indexes:
+            self.values.remove(index)
+        self.value = []
+        self.display()
 
 
 class MainForm(npyscreen.FormBaseNew):
@@ -189,14 +197,15 @@ class MainForm(npyscreen.FormBaseNew):
 
     def h_toggle_filter(self, key):
         """Toggles single filter on the filters list"""
-        index = int(key) - 1
+        index = int(chr(key)) - 1
         widget = self.get_widget('filters')
         try:
             self.parentApp.filters.remove(filters.FILTERS_LIST[index])
             widget.value.remove(index)
         except ValueError:
-            self.parentApp.filters.append(index)
+            self.parentApp.filters.append(filters.FILTERS_LIST[index])
             widget.value.append(index)
+        widget.display()
 
     def set_status(self, message):
         """Sets value for the status widget
@@ -248,7 +257,7 @@ class MainForm(npyscreen.FormBaseNew):
             keys[key.upper()] = func
         # Add filter toggling
         for i, filter_name in enumerate(filters.FILTERS_LIST, start=1):
-            keys[i] = self.h_toggle_filter
+            keys[str(i)] = self.h_toggle_filter
         self.handlers.update(keys)
 
 
@@ -278,7 +287,7 @@ class SettingsForm(npyscreen.Form):
         app._seed = seed
         app._already_cut = already_cut
         app.load_filenames(path)
-        app.initialize_panzer()
+        app.initialize_filters()
         app.setNextForm('MAIN')
 
 
@@ -286,7 +295,8 @@ class App(npyscreen.NPSAppManaged):
     """Main application class"""
     def __init__(self, *args, **kwargs):
         super(App, self).__init__(*args, **kwargs)
-        self._filenames = []
+        self._filenames = {}
+        self._filenames_list = []
         self._path = None
         self.current_track = None
         self.current_track_nos = []
@@ -302,6 +312,7 @@ class App(npyscreen.NPSAppManaged):
     @filenames.setter
     def filenames(self, value):
         self._filenames = value
+        self._filenames_list = [v for k, v in sorted(value.items())]
         track_number = self.getForm('MAIN').get_widget('track-list')
         track_number.values = list(self._filenames.keys())
         track_number.display()
@@ -437,10 +448,12 @@ class App(npyscreen.NPSAppManaged):
         )
         self.notify('{count} files loaded.'.format(count=len(self.filenames)))
 
-    def initialize_panzer(self):
+    def initialize_filters(self):
         self.notify('Initializing panzerfaust filter...')
         filters.initialize_panzer_tracks()
-        self.notify('Panzerfaust filter initialized.')
+        self.notify('Initializing overlay filter...')
+        filters.initialize_overlay_tracks()
+        self.notify('Filters initialized.')
 
 
 if __name__ == '__main__':

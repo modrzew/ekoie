@@ -119,7 +119,7 @@ def overlay_music(track):
         overlay_track = overlay_track + overlay_track
     overlay_track = overlay_track[:track_length]
     # Lower volume of our track
-    track -= 4
+    track -= 6
     return audio.overlay([track, overlay_track])
 
 
