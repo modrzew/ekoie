@@ -6,6 +6,7 @@ Battle-tested on Solarized color scheme and under tmux.
 """
 from contextlib import contextmanager
 from datetime import datetime
+from functools import partial
 import os
 import os.path
 import random
@@ -187,6 +188,9 @@ class MainForm(npyscreen.FormBaseNew):
         widget.display()
         self.parentApp.notify('Filters cleared.')
 
+    def h_toggle_filter(self, key=None):
+        pass
+
     def set_status(self, message):
         """Sets value for the status widget
 
@@ -235,6 +239,9 @@ class MainForm(npyscreen.FormBaseNew):
         # Make upperkeys available, too!
         for key, func in list(keys.items()):
             keys[key.upper()] = func
+        # Add filter toggling
+        for i, filter_name in enumerate(filters.FILTERS_LIST, start=1):
+            keys[i] = self.h_toggle_filter
         self.handlers.update(keys)
 
 
