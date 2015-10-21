@@ -6,7 +6,6 @@ Battle-tested on Solarized color scheme and under tmux.
 """
 from contextlib import contextmanager
 from datetime import datetime
-from functools import partial
 import os
 import os.path
 import random
@@ -188,8 +187,16 @@ class MainForm(npyscreen.FormBaseNew):
         widget.display()
         self.parentApp.notify('Filters cleared.')
 
-    def h_toggle_filter(self, key=None):
-        pass
+    def h_toggle_filter(self, key):
+        """Toggles single filter on the filters list"""
+        index = int(key) - 1
+        widget = self.get_widget('filters')
+        try:
+            self.parentApp.filters.remove(filters.FILTERS_LIST[index])
+            widget.value.remove(index)
+        except ValueError:
+            self.parentApp.filters.append(index)
+            widget.value.append(index)
 
     def set_status(self, message):
         """Sets value for the status widget
