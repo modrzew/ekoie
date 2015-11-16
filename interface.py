@@ -13,14 +13,13 @@ import sys
 
 import npyscreen
 
-from pyaudio_fix import fix_pyaudio
-import audio
-import filters
-import utils
-
-
-LOAD_MULTIPLE_THRESHOLD = 0.25
-LOAD_TRIPLE_THRESHOLD = 0.25
+from .pyaudio_fix import fix_pyaudio
+from . import (
+    audio,
+    config,
+    filters,
+    utils,
+)
 
 
 @contextmanager
@@ -65,10 +64,10 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         """
         app = self.parent.parentApp
         filenames = [filename]
-        if random.random() >= LOAD_MULTIPLE_THRESHOLD:
+        if random.random() >= config.LOAD_MULTIPLE_THRESHOLD:
             return filenames
         app.notify('Multiple tracks selected!')
-        if random.random() < LOAD_TRIPLE_THRESHOLD:
+        if random.random() < config.LOAD_TRIPLE_THRESHOLD:
             count = 2
         else:
             count = 1
@@ -222,19 +221,11 @@ class MainForm(npyscreen.FormBaseNew):
         """Sets proper amount of points in Points widget"""
         widget = self.get_widget('points')
         # Filters
-        points = {
-            0: 2,
-            1: 3,
-            2: 5,
-            3: 7,
-        }.get(len(self.parentApp.filters))
+        points = config.FILTER_POINTS[len(self.parentApp.filters)]
         # Multiple songs
-        points *= {
-            0: 1,
-            1: 1,
-            2: 2.4,
-            3: 3.6,
-        }.get(len(self.parentApp.current_track_nos))
+        points *= config.TRACKS_MULTIPLIER[
+            len(self.parentApp.current_track_nos)
+        ]
         widget.value = int(round(points))
         widget.display()
 

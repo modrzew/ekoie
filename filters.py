@@ -2,7 +2,10 @@ import os
 import os.path
 import random
 
-import audio
+from . import (
+    audio,
+    config
+)
 
 
 _PANZER_TRACKS = []
@@ -46,14 +49,14 @@ def _prepare(track):
 
 def speed_up(track):
     """Speeds up the track"""
-    rate = 1.4 + round(0.5 * random.random(), 2)
-    return audio.pitch(track, rate)
+    rate = random.uniform(*config.SPEED_UP_RANGE)
+    return audio.pitch(track, round(rate, 2))
 
 
 def slow_down(track):
     """Slows down the track"""
-    rate = 0.4 + round(0.5 * random.random(), 2)
-    return audio.pitch(track, rate)
+    rate = random.uniform(*config.SLOW_DOWN_RANGE)
+    return audio.pitch(track, round(rate, 2))
 
 
 def reverse(track):
@@ -63,20 +66,20 @@ def reverse(track):
 
 def frequency(track):
     """Changes frequency, effectively worsening the quality"""
-    frequency = random.randint(4000, 20000)
+    frequency = random.randint(*config.FREQUENCY_RANGE)
     return audio.frequency(track, frequency)
 
 
 def volume_changer(track):
     """Changes volume of the track"""
-    slice_length = random.choice((250, 500, 750))
+    slice_length = random.choice(config.SLICE_LENGTH)
     return audio.volume_changer(track, slice_length)
 
 
 def tone_down(track):
     """Lowers tone of the track without lowering speed"""
-    rate = 0.4 + round(0.5 * random.random(), 2)
-    return audio.tone_down(track, rate)
+    rate = random.uniform(*config.TONE_DOWN_RANGE)
+    return audio.tone_down(track, round(rate, 2))
 
 
 def panzerfaust(track):
@@ -91,8 +94,8 @@ def panzerfaust(track):
         panzer_track = panzer_track + panzer_track
     panzer_track = panzer_track[:track_length]
     # Lower volume of panzer track
-    panzer_track -= 6
-    slice_length = random.choice((250, 500, 750))
+    panzer_track -= config.PANZER_VOLUME_DECREASE
+    slice_length = random.choice(config.SLICE_LENGTH)
     return audio.mix_segments([track, panzer_track], slice_length)
 
 
@@ -103,7 +106,7 @@ def multiple_tracks(tracks):
     - mix_segments
     - overlay
     """
-    slice_length = random.choice((2000, 4000))
+    slice_length = random.choice(config.MULTIPLE_TRACKS_LENGTH)
     return audio.mix_segments(tracks, slice_length)
 
 
@@ -119,7 +122,7 @@ def overlay_music(track):
         overlay_track = overlay_track + overlay_track
     overlay_track = overlay_track[:track_length]
     # Lower volume of our track
-    track -= 6
+    track -= config.PANZER_VOLUME_DECREASE
     return audio.overlay([track, overlay_track])
 
 
@@ -154,11 +157,11 @@ def get_random_filters():
     Filters that "don't like each other" are excluded.
     """
     value = random.random()
-    if value < 0.2:
+    if value < config.MULTIPLE_FILTERS_CHANCES[0]:
         count = 0
-    elif value < 0.55:
+    elif value < config.MULTIPLE_FILTERS_CHANCES[1]:
         count = 1
-    elif value < 0.85:
+    elif value < config.MULTIPLE_FILTERS_CHANCES[2]:
         count = 2
     else:
         count = 3
