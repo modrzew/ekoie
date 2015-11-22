@@ -13,13 +13,11 @@ import sys
 
 import npyscreen
 
-from .pyaudio_fix import fix_pyaudio
-from . import (
-    audio,
-    config,
-    filters,
-    utils,
-)
+from pyaudio_fix import fix_pyaudio
+import audio
+import config
+import filters
+import utils
 
 
 @contextmanager
@@ -130,10 +128,6 @@ class TracksListWidget(npyscreen.TitleSelectOne):
         self.parent.h_reset_filters()
         self.parent.set_status('Ready to play')
         self.parent.calculate_points()
-        # And remove values from big list
-        indexes = [app._filenames_list.index(f) for f in filenames]
-        for index in indexes:
-            self.values.remove(index)
         self.value = []
         self.display()
 
@@ -154,7 +148,8 @@ class MainForm(npyscreen.FormBaseNew):
         if not app.current_track:
             app.notify('No track selected')
             return
-        for track_no in app.current_track_nos:
+        for filename in app.current_track_nos:
+            track_no = app._filenames_list.index(filename) + 1
             try:
                 self.get_widget('track-list').values.remove(track_no)
             except ValueError:

@@ -2,10 +2,8 @@ import os
 import os.path
 import random
 
-from . import (
-    audio,
-    config
-)
+import audio
+import config
 
 
 _PANZER_TRACKS = []
@@ -118,8 +116,10 @@ def overlay_music(track):
     # Cut overlay track to track's length
     track_length = len(track)
     overlay_track = audio.cut(overlay_track, track_length)
+    if track.max > overlay_track.max:
+        overlay_track += 4
     # Lower volume of our track
-    track -= config.PANZER_VOLUME_DECREASE
+    track -= config.OVERLAY_VOLUME_DECREASE
     return audio.overlay([track, overlay_track])
 
 
