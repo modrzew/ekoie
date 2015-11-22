@@ -111,16 +111,13 @@ def multiple_tracks(tracks):
 
 
 def overlay_music(track):
-    """"""
+    """Adds another song layer"""
     if not _OVERLAY_TRACKS:
         return track
     overlay_track = random.choice(_OVERLAY_TRACKS)
     # Cut overlay track to track's length
     track_length = len(track)
-    # Fix: not all overlay tracks have proper length!
-    while len(overlay_track) < track_length:
-        overlay_track = overlay_track + overlay_track
-    overlay_track = overlay_track[:track_length]
+    overlay_track = audio.cut(overlay_track, track_length)
     # Lower volume of our track
     track -= config.PANZER_VOLUME_DECREASE
     return audio.overlay([track, overlay_track])
