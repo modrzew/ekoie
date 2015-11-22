@@ -115,9 +115,15 @@ def overlay_music(track):
     overlay_track = random.choice(_OVERLAY_TRACKS)
     # Cut overlay track to track's length
     track_length = len(track)
-    overlay_track = audio.cut(overlay_track, track_length)
+    if len(overlay_track) > track_length:
+        overlay_track = audio.cut(
+            overlay_track,
+            track_length,
+            0,
+            len(overlay_track) - track_length,
+        )
     if track.max > overlay_track.max:
-        overlay_track += 4
+        overlay_track += 3
     # Lower volume of our track
     track -= config.OVERLAY_VOLUME_DECREASE
     return audio.overlay([track, overlay_track])
@@ -143,7 +149,7 @@ DONT_LIKE_EACH_OTHER = {
     'frequency': (),
     'volume changer': (),
     'tone down': ('slow down',),
-    'panzerfaust': ('volume changer', 'speed up', 'slow down'),
+    'panzerfaust': ('volume changer', 'speed up', 'slow down', 'overlay'),
     'overlay': ('panzerfaust', 'speed up'),
 }
 

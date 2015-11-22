@@ -167,13 +167,13 @@ def mix_segments(segments, slice_length=500):
     return first
 
 
-def cut(segment, length=None):
+def cut(segment, length=None, min_start=None, max_start=None):
     """Selects random sample from the segment"""
     if not length:
         length = SEGMENT_LENGTH_SECONDS * 1000
     start = random.randint(
-        MINIMUM_STARTING_POINT * 1000,
-        MAXIMUM_STARTING_POINT * 1000,
+        min_start if min_start is not None else MINIMUM_STARTING_POINT * 1000,
+        max_start if max_start is not None else MAXIMUM_STARTING_POINT * 1000,
     )
     end = start + length
     if len(segment) < end:  # segment is too short?
